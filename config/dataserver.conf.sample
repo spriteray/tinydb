@@ -1,0 +1,48 @@
+
+#
+# 核心配置
+#
+# type 			数据库类型: 1-主库; 2-备库
+#
+
+[Core]
+type 		= 1
+loglevel 	= 4
+
+#
+# 数据库服务
+#
+# host 			绑定的IP地址
+# port 			监听的端口号
+# timeout 		连接超时时间
+#
+
+[Service]
+host 		= 0.0.0.0
+port 		= 21000
+timeout 	= 90
+
+#
+# 数据库存储
+#
+# location		存档位置
+# cachesize 	缓存大小, 单位字节数, 默认1G
+#
+
+[Storage]
+location 	= /var/db/zonedb_01
+cachesize 	= 10737418243
+
+#
+# replication
+#
+# listenport 	主库监听的端口号
+# timeout 		主库的连接超时时间(单位秒)
+# keepalive		从库的保活时间(单位秒)
+# master		如果是从库, 主库的IP地址
+
+[Replication]
+listenport 	= 22000
+timeout 	= 30
+keepalive 	= 10
+master 		= 127.0.0.1:21000
