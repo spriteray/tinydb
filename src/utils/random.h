@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-namespace Utils
+namespace utils
 {
 
 class MTRand32

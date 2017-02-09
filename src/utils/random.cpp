@@ -6,7 +6,7 @@
 
 #include "random.h"
 
-namespace Utils
+namespace utils
 {
 
 MTRand32::MTRand32( uint32_t seed )

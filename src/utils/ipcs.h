@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-namespace Utils
+namespace utils
 {
 
 class CSemlock
@@ -28,7 +28,7 @@ public :
 private :
     bool            m_IsOwner;
     int32_t         m_SemId;
-    std::string     m_KeyFile;
+    std::string     m_Keyfile;
 };
 
 class CShmem
@@ -45,14 +45,36 @@ public :
     void unlink( void * ptr );
 
     bool isOwner() const;
+    int32_t shmid() const { return m_ShmId; }
 
 private :
     bool            m_IsOwner;
     int32_t         m_ShmId;
-    std::string     m_KeyFile;
+    std::string     m_Keyfile;
+};
+
+class CMmapAllocator
+{
+public :
+    CMmapAllocator( const char * keyfile );
+    ~CMmapAllocator();
+
+public :
+    void * alloc( size_t size );
+    void free( void * ptr );
+
+    bool isOwner() const { return m_IsOwner; }
+
+private :
+    bool ensureSpace( int32_t fd, size_t size );
+    void padding( int32_t fd, size_t offset, size_t size );
+
+private :
+    bool            m_IsOwner;
+    size_t          m_Size;
+    std::string     m_Keyfile;
 };
 
 }
-
 
 #endif

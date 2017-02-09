@@ -1,16 +1,31 @@
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include <sys/time.h>
 
 #include "timeutils.h"
 
-// 时间戳修正值
-int32_t g_ModifyTimestamp = 0;
-
-namespace Utils
+namespace global
 {
+    int32_t delta_timestamp = 0;
+}
+
+namespace utils
+{
+
+Clock::Clock( const char * now )
+    : m_Timestamp( TimeUtils::getTimestamp( now ) )
+{}
+
+Clock::Clock( time_t now, uint32_t interval )
+    : m_Timestamp( now+interval )
+{}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 TimeUtils::TimeUtils()
 {
@@ -77,7 +92,33 @@ int32_t TimeUtils::getTime()
     return rc;
 }
 
-time_t TimeUtils::getZeroTimestamp()
+int32_t TimeUtils::getWeekday()
+{
+    this->getTimeStruct();
+    return m_TimeStruct.tm_wday;
+}
+
+int32_t TimeUtils::getWeeknumber()
+{
+    char buf[ 64 ];
+
+    this->getTimeStruct();
+
+    if ( ::strftime( buf, 63, "%W", &m_TimeStruct ) != 0 )
+    {
+        return std::atoi( buf );
+    }
+
+    return 0;
+}
+
+int32_t TimeUtils::getMonth()
+{
+    this->getTimeStruct();
+    return m_TimeStruct.tm_mon + 1;
+}
+
+time_t TimeUtils::getZeroClockTimestamp()
 {
     getTimeStruct();
 
@@ -87,9 +128,9 @@ time_t TimeUtils::getZeroTimestamp()
     return ::mktime( &zero_timestamp );
 }
 
-time_t TimeUtils::getNextZeroTimestamp()
+time_t TimeUtils::getNextZeroClockTimestamp()
 {
-    return (this->getZeroTimestamp()+24*60*60);
+    return this->getZeroClockTimestamp() + eSeconds_OneDay;
 }
 
 time_t TimeUtils::getSpecifiedTimestamp( const char * s )
@@ -101,6 +142,35 @@ time_t TimeUtils::getSpecifiedTimestamp( const char * s )
     matched = std::sscanf( s, "%d:%d:%d", &(spec.tm_hour), &(spec.tm_min), &(spec.tm_sec) );
 
     return matched > 0 ? ::mktime( &spec ) : 0;
+}
+
+time_t TimeUtils::getSpecifiedTimestamp( int32_t offset, int32_t weekday, const char * s )
+{
+    time_t rc = 0;
+
+    getTimeStruct();
+
+    struct tm spec = m_TimeStruct;
+    int32_t matched = 0, nweekday = 0;
+    matched = std::sscanf( s, "%d:%d:%d", &(spec.tm_hour), &(spec.tm_min), &(spec.tm_sec) );
+
+    if ( matched <= 0 )
+    {
+        return 0;
+    }
+
+    // 时间
+    rc = ::mktime( &spec );
+
+    // 计算周日
+    weekday = weekday == 0 ? 7 : weekday;
+    nweekday = spec.tm_wday == 0 ? 7 : spec.tm_wday;
+
+    // 和weekday相差的天数
+    rc += ( weekday - nweekday ) * eSeconds_OneDay;
+    rc += offset * eSeconds_OneDay * eDays_OneWeek;
+
+    return rc;
 }
 
 time_t TimeUtils::time()
@@ -117,9 +187,7 @@ time_t TimeUtils::time()
         now = ::time( NULL );
     }
 
-#if defined(__DEBUG__)
-    now += g_ModifyTimestamp;
-#endif
+    now += global::delta_timestamp;
 
     return now;
 }
@@ -132,12 +200,23 @@ int64_t TimeUtils::now()
     if ( ::gettimeofday(&tv, NULL) == 0 )
     {
         now = tv.tv_sec*1000+tv.tv_usec/1000;
-#if defined(__DEBUG__)
-        now += (int64_t)g_ModifyTimestamp*1000;
-#endif
+        now += (int64_t)global::delta_timestamp * 1000;
     }
 
     return now;
+}
+
+int32_t TimeUtils::tzminutes()
+{
+    struct timeval tv;
+    struct timezone tz;
+
+    if ( ::gettimeofday( &tv, &tz ) == 0 )
+    {
+        return tz.tz_minuteswest;
+    }
+
+    return 0;
 }
 
 int32_t TimeUtils::sleep( uint64_t mseconds )
@@ -170,6 +249,14 @@ time_t TimeUtils::getTimestampByDate( const char * date )
     matched = strptime( date, "%Y-%m-%d", &t );
 
     return matched != NULL ? mktime(&t) : 0;
+}
+
+int32_t TimeUtils::daysdelta( time_t t1, time_t t2 )
+{
+    utils::TimeUtils tt1( t1 );
+    utils::TimeUtils tt2( t2 );
+
+    return std::abs( tt2.getZeroClockTimestamp() - tt1.getZeroClockTimestamp() ) / eSeconds_OneDay + 1;
 }
 
 }

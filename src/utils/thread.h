@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <pthread.h>
 
-namespace Utils
+namespace utils
 {
 
 //
@@ -20,25 +20,25 @@ public :
     IThread();
     virtual ~IThread();
 
-public :
     virtual bool onStart() = 0;
     virtual void onExecute() = 0;
     virtual void onStop() = 0;
 
 public :
-    pthread_t id() const;
-    bool isRunning() const;
-
-    void setDetach();
-    void setStackSize( uint32_t size );
-
     bool start();
-    void stop( bool iswait = true );
-    void wait();
+    void stop();
 
-public :
-    void notify();
     static bool check( pthread_t id );
+
+    pthread_t id() const { return m_ThreadID; }
+    bool isRunning() const { return m_Status == eRunning; }
+
+    void setDetach() { m_IsDetach = true; }
+    void setStackSize( uint32_t size ) { m_StackSize = size; }
+
+protected :
+    // onExcute()中停止线程
+    void stoping() { m_Status = eStoping; }
 
 private :
     enum
@@ -49,6 +49,7 @@ private :
         eStoped     = 3,
     };
 
+    void notify();
     static void * threadfunc( void * arg );
 
 private :
@@ -98,6 +99,9 @@ public :
     // 清理队列
     void cleanup();
 
+    // 设置每帧处理的任务个数
+    void setPeakCount( uint32_t count ) { m_PeakCount = count; }
+
 private :
     // 处理业务
     void onExecute();
@@ -110,6 +114,7 @@ private :
         void *      task;
     };
 
+    uint32_t                m_PeakCount;
     pthread_mutex_t         m_Lock;
     std::deque<Task>        m_TaskQueue;
 };

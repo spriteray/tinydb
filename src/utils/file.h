@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <pthread.h>
 
-namespace Utils
+namespace utils
 {
 
 //
@@ -42,6 +42,11 @@ public :
     bool get( const char * section, const char * key, int64_t & value );
     bool get( const char * section, const char * key, uint64_t & value );
     bool get( const char * section, const char * key, std::string & value );
+
+#if defined(__APPLE__) || defined(__darwin__)
+    bool get( const char * section, const char * key, long & value );
+    bool get( const char * section, const char * key, unsigned long & value );
+#endif
 
 private :
     // 解析配置文件
@@ -85,10 +90,19 @@ public :
     // 打开日志文件
     bool open();
 
-    // level=0, 不打印日志级别
+    // 打印日志
+    // 将format中的内容直接输出到日志中
     void print( uint8_t level, const char * format, ... );
 
+    // 打印日志
+    // 定前缀+format中的内容一并输出到日志中
+    // %t - 年月日 时分秒
+    // %T - 年月日 时分秒,毫秒
+    // %l %L - 日志等级
+    void printp( uint8_t level, const char * prefix, const char * format, ... );
+
     // 强制刷新日志文件
+    // 为了保证数据刷新到文件中, 所以该接口效率比较低
     void flush();
 
     // 关闭日志文件
@@ -101,11 +115,12 @@ public :
 private :
     friend class Logger;
 
+    // 打印日志
+    void append( uint8_t level, int32_t today,
+            const std::string & head, const std::string & body );
+
     // 确保key文件存在
     void ensure_keyfiles_exist( char * file1, char * file2 );
-    // 拼接日志行
-    void spliceLogline( uint8_t level,
-            int32_t & today, const char * data, std::string & logline );
 
     CShmem * getBlock() const { return m_Block; }
     const char * getPath() const { return m_Path.c_str(); }

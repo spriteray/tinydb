@@ -7,7 +7,7 @@
 #include "time.h"
 #include "thread.h"
 
-namespace Utils
+namespace utils
 {
 
 IThread::IThread()
@@ -22,32 +22,13 @@ IThread::IThread()
 
 IThread::~IThread()
 {
-    m_Status    = eReady;
-    m_IsDetach  = false;
-    m_StackSize = 0;
-    m_ThreadID  = 0;
+    if ( !m_IsDetach )
+    {
+        pthread_join( m_ThreadID, NULL );
+    }
+
     pthread_cond_destroy( &m_CtrlCond );
     pthread_mutex_destroy( &m_CtrlLock );
-}
-
-pthread_t IThread::id() const
-{
-    return m_ThreadID;
-}
-
-bool IThread::isRunning() const
-{
-    return ( m_Status == eRunning );
-}
-
-void IThread::setDetach()
-{
-    m_IsDetach = true;
-}
-
-void IThread::setStackSize( uint32_t size )
-{
-    m_StackSize = size;
 }
 
 bool IThread::start()
@@ -73,28 +54,20 @@ bool IThread::start()
     return ( rc == 0 );
 }
 
-void IThread::stop( bool iswait )
+void IThread::stop()
 {
     pthread_mutex_lock( &m_CtrlLock );
 
-    if ( m_Status != eStoped )
+    if ( m_Status == eReady )
+    {
+        m_Status = eStoped;
+    }
+    else if ( m_Status == eRunning )
     {
         m_Status = eStoping;
     }
 
-    while ( iswait && m_Status != eStoped )
-    {
-        pthread_cond_wait( &m_CtrlCond, &m_CtrlLock );
-    }
-
-    pthread_mutex_unlock( &m_CtrlLock );
-}
-
-void IThread::wait()
-{
-    pthread_mutex_lock( &m_CtrlLock );
-
-    while ( m_Status != eStoped )
+    while ( m_Status != eStoped && pthread_self() != m_ThreadID )
     {
         pthread_cond_wait( &m_CtrlCond, &m_CtrlLock );
     }
@@ -147,6 +120,7 @@ void * IThread::threadfunc( void * arg )
 // ----------------------------------------------------------------------------
 
 IWorkThread::IWorkThread()
+    : m_PeakCount( 0 )
 {
     pthread_mutex_init( &m_Lock, NULL );
 }
@@ -163,7 +137,22 @@ void IWorkThread::onExecute()
     // TODO: 是否需要一个开始的回调
 
     pthread_mutex_lock( &m_Lock );
-    std::swap( m_TaskQueue, tasklist );
+    if ( m_PeakCount == 0 )
+    {
+        // 交换任务队列
+        std::swap( m_TaskQueue, tasklist );
+    }
+    else
+    {
+        // 从任务队列中取出PeakCount个
+        while ( !m_TaskQueue.empty()
+            && tasklist.size() < m_PeakCount )
+        {
+            Task task = m_TaskQueue.front();
+            m_TaskQueue.pop_front();
+            tasklist.push_back( task );
+        }
+    }
     pthread_mutex_unlock( &m_Lock );
 
     // 回调逻辑层

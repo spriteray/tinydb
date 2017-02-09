@@ -1,16 +1,16 @@
 
 #include "hashfunc.h"
 
-namespace Utils
+namespace utils
 {
 
-uint32_t HashFunction::ap( const char * key, size_t nkey )
+size_t HashFunction::ap( const char * key, size_t len )
 {
-    uint32_t hash = 0;
+    size_t hash = 0;
 
-    for (size_t i = 0; i < nkey; ++i)
+    for ( size_t i = 0; i < len; ++i )
     {
-        if ((i & 1) == 0)
+        if ( (i & 1) == 0 )
         {
             hash ^= ((hash << 7) ^ key[i] ^ (hash >> 3));
         }
@@ -20,15 +20,15 @@ uint32_t HashFunction::ap( const char * key, size_t nkey )
         }
     }
 
-    return (hash & 0x7FFFFFFF);
+    return hash;
 }
 
-uint32_t HashFunction::elf( const char * key, size_t nkey )
+size_t HashFunction::elf( const char * key, size_t len )
 {
-    uint32_t x    = 0;
-    uint32_t hash = 0;
+    size_t      hash = 0;
+    uint32_t    x    = 0;
 
-    for ( size_t i = 0; i < nkey; ++i )
+    for ( size_t i = 0; i < len; ++i )
     {
         hash = (hash << 4) + key[i];
 
@@ -39,14 +39,14 @@ uint32_t HashFunction::elf( const char * key, size_t nkey )
         }
     }
 
-    return (hash & 0x7FFFFFFF);
+    return hash;
 }
 
-uint32_t HashFunction::djb( const char * key, size_t nkey )
+size_t HashFunction::djb( const char * key, size_t len )
 {
     uint32_t h = 5381;
 
-    for ( size_t i = 0; i < nkey; ++i )
+    for ( size_t i = 0; i < len; ++i )
     {
         h = (h<<5) + h + (uint32_t)key[i];
     }
@@ -54,11 +54,11 @@ uint32_t HashFunction::djb( const char * key, size_t nkey )
     return h;
 }
 
-uint32_t HashFunction::sax( const char * key, size_t nkey )
+size_t HashFunction::sax( const char * key, size_t len )
 {
     uint32_t h = 0;
 
-    for ( size_t i = 0; i < nkey; ++i )
+    for ( size_t i = 0; i < len; ++i )
     {
         h ^= (h<<5) + (h>>2) + (uint8_t)key[i];
     }
@@ -66,11 +66,11 @@ uint32_t HashFunction::sax( const char * key, size_t nkey )
     return h;
 }
 
-uint32_t HashFunction::sdbm( const char * key, size_t nkey )
+size_t HashFunction::sdbm( const char * key, size_t len )
 {
     uint32_t h = 0;
 
-    for ( size_t i = 0; i < nkey; ++i )
+    for ( size_t i = 0; i < len; ++i )
     {
         h = (uint8_t)key[i] + (h<<6) + (h<<16) - h;
     }
@@ -78,28 +78,33 @@ uint32_t HashFunction::sdbm( const char * key, size_t nkey )
     return h;
 }
 
-uint32_t HashFunction::bkdr( const char * key, size_t nkey )
+size_t HashFunction::bkdr( const char * key, size_t len )
 {
-    uint32_t hash = 0;
+    size_t hash = 0;
     uint32_t seed = 13131;
 
-    for (size_t i = 0; i < nkey; ++i)
+    for (size_t i = 0; i < len; ++i)
     {
         hash = hash * seed + key[i];
     }
 
-    return (hash & 0x7FFFFFFF);
+    return hash;
 }
 
-uint32_t HashFunction::murmur32( const char * key, size_t nkey, uint32_t seed )
+size_t HashFunction::murmur( const char * key, size_t len )
+{
+    return HashFunction::murmur64( key, len );
+}
+
+uint32_t HashFunction::murmur32( const char * key, size_t len, uint32_t seed )
 {
     const int32_t r = 24;
     const uint32_t m = 0x5bd1e995;
 
-    uint32_t h = seed ^ nkey;
+    uint32_t h = seed ^ len;
     const uint8_t * data = (const uint8_t *)key;
 
-    while ( nkey >= 4 )
+    while ( len >= 4 )
     {
         uint32_t k = *(uint32_t *)data;
 
@@ -111,10 +116,10 @@ uint32_t HashFunction::murmur32( const char * key, size_t nkey, uint32_t seed )
         h ^= k;
 
         data += 4;
-        nkey -= 4;
+        len -= 4;
     }
 
-    switch ( nkey )
+    switch ( len )
     {
         case 3 :
             h ^= data[2] << 16;
@@ -132,15 +137,15 @@ uint32_t HashFunction::murmur32( const char * key, size_t nkey, uint32_t seed )
     return h;
 }
 
-uint64_t HashFunction::murmur64( const char * key, size_t nkey, uint64_t seed )
+uint64_t HashFunction::murmur64( const char * key, size_t len, uint64_t seed )
 {
     const int32_t r = 47;
     const uint64_t m = 0xc6a4a7935bd1e995;
 
-    uint64_t h = seed ^ (nkey * m);
+    uint64_t h = seed ^ (len * m);
 
     const uint64_t * data = (const uint64_t *)key;
-    const uint64_t * end = data + (nkey/8);
+    const uint64_t * end = data + (len/8);
 
     while ( data != end )
     {
@@ -156,7 +161,7 @@ uint64_t HashFunction::murmur64( const char * key, size_t nkey, uint64_t seed )
 
     const uint8_t * data2 = (const uint8_t *)data;
 
-    switch ( nkey & 7 )
+    switch ( len & 7 )
     {
         case 7 :
             h ^= uint64_t(data2[6]) << 48;

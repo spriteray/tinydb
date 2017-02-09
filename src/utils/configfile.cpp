@@ -13,7 +13,7 @@
 
 #define TEST_UNIT    0
 
-namespace Utils
+namespace utils
 {
 
 class ConfigSection
@@ -384,6 +384,32 @@ bool ConfigFile::get( const char * section, const char * key, std::string & valu
     }
     return false;
 }
+
+#if defined(__APPLE__) || defined(__darwin__)
+
+bool ConfigFile::get( const char * section, const char * key, long & value )
+{
+    const char * _value = getValue( section, key );
+    if ( _value )
+    {
+        value = (long)std::atoll( _value );
+        return true;
+    }
+    return false;
+}
+
+bool ConfigFile::get( const char * section, const char * key, unsigned long & value )
+{
+    const char * _value = getValue( section, key );
+    if ( _value )
+    {
+        value = (unsigned long)std::atoll( _value );
+        return true;
+    }
+    return false;
+}
+
+#endif
 
 }
 
