@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 
+#include "utils/file.h"
 #include "utils/singleton.h"
 
 class CDatadConfig : public Singleton<CDatadConfig>

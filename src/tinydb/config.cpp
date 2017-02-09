@@ -1,4 +1,5 @@
 
+#include <cassert>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -20,7 +21,7 @@ bool CDatadConfig::load( const char * path )
 {
     bool rc = false;
 
-    Utils::ConfigFile raw_file( path );
+    utils::ConfigFile raw_file( path );
     rc = raw_file.open();
     assert( rc && "CDatadConfig::load() failed" );
 

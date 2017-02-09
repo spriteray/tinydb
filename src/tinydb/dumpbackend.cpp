@@ -15,7 +15,7 @@ void * dump_backend( void * arg )
     DumpThreadArgs * args = (DumpThreadArgs *)arg;
     sid_t sid = args->sid;
     CDataServer * server = args->server;
-    CLevelDBEngine * engine = (CLevelDBEngine *)args->server->getStorageEngine();
+    LevelDBEngine * engine = args->server->getStorageEngine();
 
     leveldb::ReadOptions options;
     options.snapshot = engine->getDatabase()->GetSnapshot();
@@ -47,8 +47,8 @@ void * dump_backend( void * arg )
                 std::string value = it->value().ToString();
 
                 // 拼接KEY和VALUE
-                buf.code( key );
-                buf.code( value );
+                buf.encode( key );
+                buf.encode( value );
             }
 
             ++count;

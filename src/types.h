@@ -1,6 +1,6 @@
 
-#ifndef __SRC_BASE_DEFINE_H__
-#define __SRC_BASE_DEFINE_H__
+#ifndef __SRC_BASE_TYPES_H__
+#define __SRC_BASE_TYPES_H__
 
 #include <vector>
 #include <string>

@@ -2,7 +2,7 @@
 #ifndef __SRC_TINYDB_DATASERVICE_H__
 #define __SRC_TINYDB_DATASERVICE_H__
 
-#include "define.h"
+#include "types.h"
 #include "io/io.h"
 
 #include "protocol.h"

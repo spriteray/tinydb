@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "base.h"
+#include "types.h"
 #include "version.h"
 
 #include "utils/utility.h"
@@ -15,13 +15,7 @@
 #include "dumpbackend.h"
 #include "dataserver.h"
 
-#if __STORAGEENGINE__ == BDB_STORAGEENGINE
-#include "bdbengine.h"
-#elif __STORAGEENGINE__ == LEVELDB_STORAGEENGINE
 #include "leveldbengine.h"
-#elif __STORAGEENGINE__ == MYSQL_STORAGEENGINE
-#include "mysqlengine.h"
-#endif
 
 namespace Datad
 {
@@ -34,7 +28,7 @@ struct LeveldbFetcher
     bool operator () ( const std::string & key, const std::string & value )
     {
         std::string prefix;
-        Utils::Utility::snprintf( prefix, key.size()+512,
+        utils::Utility::snprintf( prefix, key.size()+512,
                 "VALUE %s 0 %d\r\n", key.c_str(), value.size() );
         response += prefix;
         response += value;
@@ -65,15 +59,15 @@ bool CDataServer::onStart()
     const char * host = CDatadConfig::getInstance().getBindHost();
 
     // 初始化数据库
-#if __STORAGEENGINE__ == LEVELDB_STORAGEENGINE
-    m_StorageEngine = new CLevelDBEngine;
-#endif
+    m_StorageEngine = new LevelDBEngine( CDatadConfig::getInstance().getStorageLocation() );
     if ( m_StorageEngine == NULL )
     {
         return false;
     }
 
-    if ( !m_StorageEngine->start("") )
+    m_StorageEngine->setCacheSize( CDatadConfig::getInstance().getCacheSize() );
+
+    if ( !m_StorageEngine->initialize() )
     {
         return false;
     }
@@ -103,7 +97,7 @@ bool CDataServer::onStart()
 void CDataServer::onExecute()
 {
     this->dispatch();
-    Utils::TimeUtils::sleep( 10 );
+    utils::TimeUtils::sleep( 10 );
 }
 
 void CDataServer::onStop()
@@ -120,7 +114,7 @@ void CDataServer::onStop()
 
     if ( m_StorageEngine != NULL )
     {
-        m_StorageEngine->stop();
+        m_StorageEngine->finalize();
         delete m_StorageEngine;
         m_StorageEngine = NULL;
     }
@@ -298,25 +292,23 @@ void CDataServer::gets( CacheMessage * message )
 
     for ( iter = message->getKeyList().begin(); iter != message->getKeyList().end(); ++iter )
     {
-#if __STORAGEENGINE__ == LEVELDB_STORAGEENGINE
         int32_t npos = (*iter).find( "*" );
         if ( npos != -1 )
         {
             std::string prefix = (*iter).substr( 0, npos );
-            CLevelDBEngine * engine = (CLevelDBEngine *)m_StorageEngine;
 
             LeveldbFetcher fetcher( response );
-            engine->foreach( prefix, fetcher );
+            m_StorageEngine->foreach( prefix, fetcher );
 
             continue;
         }
-#endif
+
         Value value;
         bool rc = m_StorageEngine->get( *iter, value );
         if ( rc )
         {
             std::string prefix;
-            Utils::Utility::snprintf( prefix, (*iter).size()+512,
+            utils::Utility::snprintf( prefix, (*iter).size()+512,
                     "VALUE %s 0 %d\r\n", (*iter).c_str(), value.size() );
             response += prefix;
             response += value;
@@ -448,15 +440,7 @@ void CDataServer::dump( CacheMessage * message )
 {
     std::string response;
 
-#if __STORAGEENGINE__ != LEVELDB_STORAGEENGINE
-    // 非LEVELDB引擎不支持备份
-    response += MEMCACHED_RESPONSE_SERVERERROR;
-    response += " ";
-    response += "the engine not support dump online";
-    response += "\r\n";
-    m_DataService->send( message->getSid(), response );
-#else
-    if ( m_DumpThread != 0 && Utils::IThread::check( m_DumpThread ) )
+    if ( m_DumpThread != 0 && utils::IThread::check( m_DumpThread ) )
     {
         response += MEMCACHED_RESPONSE_SERVERERROR;
         response += " ";
@@ -478,7 +462,6 @@ void CDataServer::dump( CacheMessage * message )
         m_DataService->send( message->getSid(), response );
         delete args;
     }
-#endif
 }
 
 }

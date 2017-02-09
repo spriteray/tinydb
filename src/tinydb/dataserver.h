@@ -4,21 +4,21 @@
 
 #include <pthread.h>
 
-#include "define.h"
+#include "base.h"
 
 #include "utils/thread.h"
 #include "utils/singleton.h"
 
 #include "status.h"
-#include "storage.h"
 
 namespace Datad
 {
 
 class CDataService;
 class CacheMessage;
+class LevelDBEngine;
 
-class CDataServer : public Utils::IThread, public Singleton<CDataServer>
+class CDataServer : public utils::IThread, public Singleton<CDataServer>
 {
 public :
     enum
@@ -44,7 +44,7 @@ public :
     CDataService * getService() const { return m_DataService; }
 
     // 获取存档服务
-    Storage::IStorageEngine * getStorageEngine() const { return m_StorageEngine; }
+    LevelDBEngine * getStorageEngine() const { return m_StorageEngine; }
 
 private :
     void dispatch();
@@ -75,7 +75,7 @@ private :
 
     pthread_t                   m_DumpThread;       // 存档线程
     ServerStatus                m_ServerStatus;
-    Storage::IStorageEngine *   m_StorageEngine;
+    LevelDBEngine *             m_StorageEngine;
 };
 
 

@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "define.h"
 #include "base.h"
+#include "types.h"
 #include "version.h"
 
 #include "utils/file.h"
@@ -19,7 +19,7 @@
 
 //
 RunStatus               g_RunStatus;
-Utils::LogFile *        g_Logger;
+utils::LogFile *        g_Logger;
 
 //
 static void signal_handle( int signo );
@@ -104,10 +104,10 @@ void initialize( const char * module )
     signal( SIGTERM, signal_handle );
 
     // 打开全局日志文件
-    g_Logger = new Utils::LogFile( "log", module );
-    assert( g_Logger != NULL && "new Utils::LogFile failed" );
+    g_Logger = new utils::LogFile( "log", module );
+    assert( g_Logger != NULL && "new utils::LogFile failed" );
     rc = g_Logger->open();
-    assert( rc && "Utils::LogFile()::open failed" );
+    assert( rc && "utils::LogFile()::open failed" );
 
     // 加载系统配置
     CDatadConfig::getInstance().load( "config/dataserver.conf" );
@@ -152,7 +152,7 @@ int main(int argc, char ** argv)
             g_RunStatus = eRunStatus_Running;
         }
 
-        Utils::TimeUtils::sleep( 100 );
+        utils::TimeUtils::sleep( 100 );
     }
 
     // 服务退出

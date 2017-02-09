@@ -5,7 +5,7 @@ namespace Datad
 {
 
 ServerStatus::ServerStatus()
-    : m_StartTime( Utils::TimeUtils::time() ),
+    : m_StartTime( utils::TimeUtils::time() ),
       m_GetOps( 0 ),
       m_SetOps( 0 ),
       m_NowTime( 0ULL )
@@ -16,7 +16,7 @@ ServerStatus::~ServerStatus()
 
 void ServerStatus::refresh()
 {
-    m_NowTime = Utils::TimeUtils::time();
+    m_NowTime = utils::TimeUtils::time();
     getrusage( RUSAGE_SELF, &m_CpuUsage );
 }
 

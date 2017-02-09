@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "define.h"
+#include "types.h"
 #include "utils/timeutils.h"
 
 namespace Datad
