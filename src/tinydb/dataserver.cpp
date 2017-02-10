@@ -292,27 +292,26 @@ void CDataServer::gets( CacheMessage * message )
 
     for ( iter = message->getKeyList().begin(); iter != message->getKeyList().end(); ++iter )
     {
-        int32_t npos = (*iter).find( "*" );
-        if ( npos != -1 )
+        if ( (*iter).find( "*" ) != std::string::npos )
         {
-            std::string prefix = (*iter).substr( 0, npos );
-
             LeveldbFetcher fetcher( response );
-            m_StorageEngine->foreach( prefix, fetcher );
-
-            continue;
+            m_StorageEngine->foreach( (*iter), fetcher );
         }
-
-        Value value;
-        bool rc = m_StorageEngine->get( *iter, value );
-        if ( rc )
+        else
         {
-            std::string prefix;
-            utils::Utility::snprintf( prefix, (*iter).size()+512,
-                    "VALUE %s 0 %d\r\n", (*iter).c_str(), value.size() );
-            response += prefix;
-            response += value;
-            response += "\r\n";
+            Value value;
+            bool rc = false;
+
+            rc = m_StorageEngine->get( *iter, value );
+            if ( rc )
+            {
+                std::string prefix;
+                utils::Utility::snprintf( prefix, (*iter).size()+512,
+                        "VALUE %s 0 %d\r\n", (*iter).c_str(), value.size() );
+                response += prefix;
+                response += value;
+                response += "\r\n";
+            }
         }
 
         m_ServerStatus.addGetOps();
