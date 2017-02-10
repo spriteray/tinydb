@@ -6,7 +6,7 @@
 
 class CacheMessage;
 
-namespace Datad
+namespace tinydb
 {
 class CacheProtocol
 {

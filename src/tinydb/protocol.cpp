@@ -9,7 +9,7 @@
 #include "base.h"
 #include "version.h"
 
-namespace Datad
+namespace tinydb
 {
 
 CacheProtocol::CacheProtocol()

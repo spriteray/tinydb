@@ -4,7 +4,7 @@
 
 #include "io/io.h"
 
-namespace Datad
+namespace tinydb
 {
 
 // 参数

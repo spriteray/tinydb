@@ -8,7 +8,7 @@
 #include <leveldb/options.h>
 #include <leveldb/write_batch.h>
 
-namespace Datad
+namespace tinydb
 {
 
 typedef std::string Key;

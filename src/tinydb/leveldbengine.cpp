@@ -7,7 +7,7 @@
 
 #include "leveldbengine.h"
 
-namespace Datad
+namespace tinydb
 {
 
 LevelDBEngine::LevelDBEngine( const std::string & location )

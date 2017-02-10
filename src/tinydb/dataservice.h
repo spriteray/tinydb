@@ -7,7 +7,7 @@
 
 #include "protocol.h"
 
-namespace Datad
+namespace tinydb
 {
 
 class CClientSession : public IIOSession

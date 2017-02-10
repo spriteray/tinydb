@@ -10,7 +10,7 @@
 
 #include "io/io.h"
 
-namespace Datad
+namespace tinydb
 {
 
 class CacheItem

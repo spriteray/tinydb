@@ -1,7 +1,7 @@
 
 #include "status.h"
 
-namespace Datad
+namespace tinydb
 {
 
 ServerStatus::ServerStatus()

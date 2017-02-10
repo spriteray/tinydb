@@ -5,7 +5,7 @@
 
 #include "message.h"
 
-namespace Datad
+namespace tinydb
 {
 
 CacheMessage::CacheMessage()

@@ -6,7 +6,7 @@
 #include "dataserver.h"
 #include "dataservice.h"
 
-namespace Datad
+namespace tinydb
 {
 
 CClientSession::CClientSession()

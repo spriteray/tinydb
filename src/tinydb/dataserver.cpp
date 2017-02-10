@@ -17,7 +17,7 @@
 
 #include "leveldbengine.h"
 
-namespace Datad
+namespace tinydb
 {
 
 struct LeveldbFetcher
@@ -454,7 +454,7 @@ void CDataServer::dump( CacheMessage * message )
     args->server = this;
     args->sid = message->getSid();
 
-    if ( pthread_create( &m_DumpThread, NULL, Datad::dump_backend, args ) != 0 )
+    if ( pthread_create( &m_DumpThread, NULL, tinydb::dump_backend, args ) != 0 )
     {
         response += MEMCACHED_RESPONSE_SERVERERROR;
         response += " ";

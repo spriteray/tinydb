@@ -11,7 +11,7 @@
 
 #include "status.h"
 
-namespace Datad
+namespace tinydb
 {
 
 class CDataService;

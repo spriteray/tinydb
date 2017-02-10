@@ -7,7 +7,7 @@
 #include "dataservice.h"
 #include "dumpbackend.h"
 
-namespace Datad
+namespace tinydb
 {
 
 void * dump_backend( void * arg )

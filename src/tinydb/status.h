@@ -11,7 +11,7 @@
 #include "types.h"
 #include "utils/timeutils.h"
 
-namespace Datad
+namespace tinydb
 {
 
 class ServerStatus

@@ -139,11 +139,11 @@ int main(int argc, char ** argv)
 
     // 服务开启
     LOG_INFO( "%s-%s start ...\n", module.c_str(), __APPVERSION__ );
-    Datad::CDataServer::getInstance().start();
+    tinydb::CDataServer::getInstance().start();
     g_RunStatus = eRunStatus_Running;
 
     while ( g_RunStatus != eRunStatus_Stop
-            && Datad::CDataServer::getInstance().isRunning() )
+            && tinydb::CDataServer::getInstance().isRunning() )
     {
         if ( g_RunStatus == eRunStatus_Reload )
         {
@@ -157,7 +157,7 @@ int main(int argc, char ** argv)
 
     // 服务退出
     g_RunStatus = eRunStatus_Stop;
-    Datad::CDataServer::getInstance().stop();
+    tinydb::CDataServer::getInstance().stop();
     LOG_INFO( "%s-%s stop .\n", module.c_str(), __APPVERSION__ );
 
     // 销毁
