@@ -20,20 +20,28 @@ public :
     ~CacheItem() {}
 
 public :
+    // 检查数据块
+    bool checkDataChunk();
+
+    // 追加长度
+    void appendValue( const std::string & value ) { m_Value += value; }
+
+public :
     // Key
     void setKey( const char * key ) { m_Key = key; }
     const std::string & getKey() const { return m_Key; }
 
     // Value
-    void setCapacity( int32_t c ) { m_Value.reserve( c ); }
-
     const std::string & getValue() const { return m_Value; }
     uint32_t getValueSize() const { return m_Value.size(); }
-    uint32_t getValueCapacity() const { return m_Value.capacity(); }
 
-    void appendValue( const std::string & value ) { m_Value += value; }
+    // Value Capacity
+    void setValueCapacity( uint32_t c ) { m_Capacity = c; }
+    uint32_t getValueCapacity() const { return m_Capacity; }
+
 
 private :
+    uint32_t        m_Capacity;     // 容量
     std::string     m_Key;
     std::string     m_Value;
 };
@@ -48,6 +56,7 @@ public :
 
 public :
     bool isComplete();
+    bool checkDataChunk();
 
     sid_t getSid() const { return m_Sid; }
     void setSid( sid_t id ) { m_Sid = id; }
