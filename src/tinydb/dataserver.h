@@ -46,6 +46,9 @@ public :
     // 获取存档服务
     LevelDBEngine * getStorageEngine() const { return m_StorageEngine; }
 
+    // 检查磁盘占用
+    bool checkDiskUsage() const;
+
 private :
     void dispatch();
     void process( CacheMessage * msg );

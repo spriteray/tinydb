@@ -137,6 +137,16 @@ void CDataServer::post( CacheMessage * msg )
     }
 }
 
+bool CDataServer::checkDiskUsage() const
+{
+    if ( m_StorageEngine != NULL )
+    {
+        return m_StorageEngine->check( 5 );
+    }
+
+    return true;
+}
+
 void CDataServer::dispatch()
 {
     TaskQueue swapqueue;
