@@ -86,7 +86,7 @@ int32_t CacheProtocol::decode( const char * buffer, uint32_t nbytes )
             {
                 // key datasize 合法
                 m_Message->fetchItem()->setKey( fields[0] );
-                m_Message->fetchItem()->setCapacity( atoi(fields[3]) );
+                m_Message->fetchItem()->setValueCapacity( atoi(fields[3]) + 2 );     // DataChunk\r\n
 
                 if ( fields[ 1 ] != NULL )
                 {
@@ -171,11 +171,8 @@ int32_t CacheProtocol::decode( const char * buffer, uint32_t nbytes )
 
             if ( m_Message->isComplete() )
             {
-                if ( strncmp( buffer+length, "\r\n", 2 ) == 0 )
-                {
-                    length += 2;
-                }
-                else
+                // 检查Value换行符
+                if ( !m_Message->checkDataChunk() )
                 {
                     m_Message->setError("CLIENT_ERROR bad data chunk");
                 }
