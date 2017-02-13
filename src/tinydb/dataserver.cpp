@@ -348,6 +348,9 @@ void CDataServer::stat( CacheMessage * message )
     sprintf( data, "STAT time %ld\r\n", m_ServerStatus.getNowTime() );
     response += data;
 
+    sprintf( data, "STAT disk_usage %3.2f\r\n", (100.0f-m_StorageEngine->diskusage())/100.0f );
+    response += data;
+
     m_ServerStatus.getUserUsage( sec, usec );
     sprintf( data, "STAT rusage_user %ld.%06ld\r\n", sec, usec );
     response += data;

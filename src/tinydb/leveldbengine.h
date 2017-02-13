@@ -48,6 +48,9 @@ public :
     // 获取数据库
     leveldb::DB * getDatabase() const { return m_Database; }
 
+    // 磁盘使用率
+    int32_t diskusage() const;
+
     // 检查磁盘容量
     bool check( int32_t threshold ) const;
 
@@ -118,8 +121,6 @@ private :
 
     // 自动提交
     bool autocommit();
-    // 磁盘使用率
-    int32_t diskusage() const;
 
 private :
     size_t                          m_Capacity;
