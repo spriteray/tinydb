@@ -1,5 +1,6 @@
 
 #include <cassert>
+#include <sys/time.h>
 
 #include "io.h"
 
@@ -91,13 +92,16 @@ void IIOSession::onShutdownSession( void * context, int32_t way )
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-IIOService::IIOService( uint8_t nthreads, uint32_t nclients, bool realtime )
+IIOService::IIOService( uint8_t nthreads, uint32_t nclients, bool immediately )
     : m_IOLayer( NULL ),
       m_ThreadsCount( nthreads ),
       m_SessionsCount( nclients ),
       m_IOContextGroup( NULL )
 {
-    m_IOLayer = iolayer_create( m_ThreadsCount, m_SessionsCount, realtime ? 1 : 0 );
+    pthread_cond_init( &m_Cond, NULL );
+    pthread_mutex_init( &m_Lock, NULL );
+
+    m_IOLayer = iolayer_create( m_ThreadsCount, m_SessionsCount, immediately ? 1 : 0 );
 
     if ( m_IOLayer != NULL )
     {
@@ -135,6 +139,20 @@ IIOService::~IIOService()
 
         delete [] m_IOContextGroup;
     }
+
+    pthread_cond_destroy( &m_Cond );
+    pthread_mutex_destroy( &m_Lock );
+}
+
+sid_t IIOService::id( const char * host, uint16_t port )
+{
+    sid_t sid = 0;
+
+    pthread_mutex_lock( &m_Lock );
+    sid = this->getConnectedSid( host, port );
+    pthread_mutex_unlock( &m_Lock );
+
+    return sid == (sid_t)-1 ? 0 : sid ;
 }
 
 bool IIOService::listen( const char * host, uint16_t port )
@@ -142,9 +160,41 @@ bool IIOService::listen( const char * host, uint16_t port )
     return ( iolayer_listen( m_IOLayer, host, port, onAcceptSession, this ) == 0 );
 }
 
-bool IIOService::connect( const char * host, uint16_t port, int32_t seconds )
+bool IIOService::connect( const char * host, uint16_t port, int32_t seconds, bool isblock )
 {
-    return ( iolayer_connect( m_IOLayer, host, port, seconds, onConnectSession, this ) == 0 );
+    if ( iolayer_connect( m_IOLayer, host, port, seconds, onConnectSession, this ) != 0 )
+    {
+        return false;
+    }
+
+    if ( !isblock )
+    {
+        return true;
+    }
+
+    sid_t connectedsid = 0;
+
+    // 计算超时时间
+    struct timeval now;
+    gettimeofday( &now, NULL );
+
+    pthread_mutex_lock( &m_Lock );
+    for ( ;; )
+    {
+        connectedsid = getConnectedSid( host, port );
+        if ( connectedsid != 0 )
+        {
+            break;
+        }
+
+        struct timespec outtime;
+        outtime.tv_sec = now.tv_sec + seconds;
+        outtime.tv_nsec = now.tv_usec * 1000;
+        pthread_cond_timedwait( &m_Cond, &m_Lock, &outtime );
+    }
+    pthread_mutex_unlock( &m_Lock );
+
+    return connectedsid > 0 && connectedsid != (sid_t)-1;
 }
 
 void IIOService::stop()
@@ -214,6 +264,48 @@ void IIOService::attach( sid_t id, IIOSession * session, void * iocontext, const
     iolayer_set_service( m_IOLayer, id, &ioservice, session );
 }
 
+sid_t IIOService::getConnectedSid( const char * host, uint16_t port ) const
+{
+    for ( size_t i = 0; i < m_RemoteHosts.size(); ++i )
+    {
+        if ( m_RemoteHosts[i].port == port
+                && m_RemoteHosts[i].host == std::string( host ) )
+        {
+            return m_RemoteHosts[i].sid;
+        }
+    }
+
+    return 0;
+}
+
+void IIOService::setConnectedSid( const char * host, uint16_t port, sid_t sid )
+{
+    pthread_mutex_lock( &m_Lock );
+
+    if ( sid != 0 )
+    {
+        bool is_add = true;
+
+        for ( size_t i = 0; i < m_RemoteHosts.size(); ++i )
+        {
+            if ( m_RemoteHosts[i].port == port
+                    && m_RemoteHosts[i].host == std::string( host ) )
+            {
+                is_add = false;
+                m_RemoteHosts[i].sid = sid;
+            }
+        }
+
+        if ( is_add )
+        {
+            m_RemoteHosts.push_back( RemoteHost( host, port, sid ) );
+        }
+    }
+    pthread_cond_signal( &m_Cond );
+
+    pthread_mutex_unlock( &m_Lock );
+}
+
 char * IIOService::onTransformService( void * context, const char * buffer, uint32_t * nbytes )
 {
     uint32_t & _nbytes = *nbytes;
@@ -244,8 +336,13 @@ int32_t IIOService::onConnectSession( void * context, void * iocontext, int32_t 
 
     if ( result != 0 )
     {
+        // 通知
+        service->setConnectedSid( host, port, -1 );
         return service->onConnectFailed( result, host, port ) ? 0 : -2;
     }
+
+    // 通知
+    service->setConnectedSid( host, port, id );
 
     session = service->onConnectSucceed( id, host, port );
     if ( session == NULL )

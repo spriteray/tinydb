@@ -90,15 +90,18 @@ int32_t CacheProtocol::decode( const char * buffer, uint32_t nbytes )
 
                 if ( fields[ 1 ] != NULL )
                 {
-                    LOG_WARN( "CacheProtocol::decode(CMD:'%s', KEY:'%s') : the datad-%s not support the Flags feature .\n", cmd, fields[0], __APPVERSION__ );
+                    LOG_WARN( "CacheProtocol::decode(CMD:'%s', KEY:'%s') : the %s-%s not support the Flags feature .\n",
+                            cmd, fields[0], __APPNAME__, __APPVERSION__ );
                 }
                 if ( fields[ 2 ] != NULL )
                 {
-                    LOG_WARN( "CacheProtocol::decode(CMD:'%s', KEY:'%s') : this datad-%s not support the ExpireTime feature .\n", cmd, fields[0], __APPVERSION__ );
+                    LOG_WARN( "CacheProtocol::decode(CMD:'%s', KEY:'%s') : this %s-%s not support the ExpireTime feature .\n",
+                            cmd, fields[0], __APPNAME__, __APPVERSION__ );
                 }
                 if ( nfields == 5 && fields[4] != NULL )
                 {
-                    LOG_WARN( "CacheProtocol::decode(CMD:'%s', KEY:'%s') : this datad-%s not support the CasUnique feature .\n", cmd, fields[0], __APPVERSION__ );
+                    LOG_WARN( "CacheProtocol::decode(CMD:'%s', KEY:'%s') : this %s-%s not support the CasUnique feature .\n",
+                            cmd, fields[0], __APPNAME__, __APPVERSION__ );
                 }
 
                 // TODO: cas
@@ -184,10 +187,10 @@ int32_t CacheProtocol::decode( const char * buffer, uint32_t nbytes )
 
 char * CacheProtocol::getline( const char * buffer, uint32_t nbytes, int32_t & length )
 {
-    int32_t len = 0;
+    uint32_t len = 0;
     char * line = NULL;
 
-    for ( len = 0; len < (int32_t)nbytes; ++len )
+    for ( len = 0; len < nbytes; ++len )
     {
         if ( buffer[ len ] == '\r'
                 && buffer[ len+1 ] == '\n' )
@@ -196,22 +199,22 @@ char * CacheProtocol::getline( const char * buffer, uint32_t nbytes, int32_t & l
         }
     }
 
-    if ( len == (int32_t)nbytes )
+    if ( len == nbytes )
     {
         return NULL;
     }
 
-
-    if ( (line = (char *)::malloc(len + 1)) == NULL )
+    line = (char *)::malloc( len + 1 );
+    if ( line == NULL )
     {
         return NULL;
     }
 
+    //
+    ::memcpy( line, buffer, len );
     //
     length = len + 2;
     line[ len ] = '\0';
-    //
-    ::memcpy( line, buffer, len );
 
     return line;
 }

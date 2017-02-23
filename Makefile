@@ -6,9 +6,7 @@ PATHS		= bin lib include build \
 			  bin/log bin/config
 
 # 项目中需要用第三方库
-THIRDLIBS 	= evlite leveldb \
-			   tcmalloc_minimal
-ROOT = $(HOME)/tinydb
+THIRDLIBS 	= evlite leveldb tcmalloc
 
 # 定义工程中的所有项目
 DATAD		= $(ROOT)/src/tinydb

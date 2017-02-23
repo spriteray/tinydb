@@ -40,6 +40,7 @@ public :
 
 public :
     bool decode( bool & data );
+    bool decode( char & data );
     bool decode( int8_t & data );
     bool decode( uint8_t & data );
     bool decode( int16_t & data );
@@ -89,6 +90,7 @@ public :
 
 public :
     bool encode( const bool & data );
+    bool encode( const char & data );
     bool encode( const int8_t & data );
     bool encode( const uint8_t & data );
     bool encode( const int16_t & data );

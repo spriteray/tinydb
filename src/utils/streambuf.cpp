@@ -172,6 +172,19 @@ bool StreamBuf::decode( bool & data )
     return rc;
 }
 
+bool StreamBuf::decode( char & data )
+{
+    uint8_t d = 0;
+    bool rc = false;
+
+    assert( m_Method == eMethod_Decode );
+
+    rc = decode( d );
+    data = d;
+
+    return rc;
+}
+
 bool StreamBuf::decode( int8_t & data )
 {
     uint32_t len = sizeof( int8_t );
@@ -415,6 +428,15 @@ bool StreamBuf::decode( char * data, uint32_t & len )
 bool StreamBuf::encode( const bool & data )
 {
     uint8_t d = data ? 1 : 0;
+
+    assert( m_Method == eMethod_Encode );
+
+    return encode( d );
+}
+
+bool StreamBuf::encode( const char & data )
+{
+    uint8_t d = data;
 
     assert( m_Method == eMethod_Encode );
 

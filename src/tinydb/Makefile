@@ -14,6 +14,7 @@
 
 BIN				= datad
 
+PRODUCT 		= TinyDBServer
 VERSION			= 3.0.3
 
 DEPEND_LIBS		= evlite leveldb pthread
